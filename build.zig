@@ -8,13 +8,14 @@ pub fn build(b: *std.build.Builder) void {
     // for restricting supported target set are available.
     var target = b.standardTargetOptions(.{});
 
-    // Standard release options allow the person running `zig build` to select
-    // between Debug, ReleaseSafe, ReleaseFast, and ReleaseSmall.
-    const mode = b.standardReleaseOptions();
+    const optimize = b.standardOptimizeOption(.{});
 
-    const exe = b.addExecutable("mruby-zig", "examples/main.zig");
-    exe.setTarget(target);
-    exe.setBuildMode(mode);
+    const exe = b.addExecutable(.{
+        .name = "mruby-zig",
+        .root_source_file = .{ .path = "examples/main.zig" },
+        .target = target,
+        .optimize = optimize,
+    });
     addMruby(exe);
     exe.install();
 
@@ -27,9 +28,12 @@ pub fn build(b: *std.build.Builder) void {
     const run_step = b.step("run", "Run the app");
     run_step.dependOn(&run_cmd.step);
 
-    const exe_tests = b.addTest("examples/main.zig");
-    exe_tests.setTarget(target);
-    exe_tests.setBuildMode(mode);
+    const exe_tests = b.addTest(.{
+        .root_source_file = .{ .path = "examples/main.zig" },
+        .target = target,
+        .optimize = optimize,
+    });
+
     addMruby(exe_tests);
 
     const test_step = b.step("test", "Run unit tests");
@@ -57,12 +61,16 @@ pub fn addMruby(exe: *std.build.LibExeObjStep) void {
     const compat_path = path.join(allocator, &.{ src_dir, "src", "mruby_compat.c" }) catch unreachable;
     const package_path = path.join(allocator, &.{ src_dir, "src", "mruby.zig" }) catch unreachable;
 
+    const mruby_module =  std.Build.CreateModuleOptions {
+        .source_file = .{ .path = package_path },
+    };
+
     exe.addSystemIncludePath(include_path);
     exe.addLibraryPath(library_path);
     exe.linkSystemLibrary("mruby");
     exe.linkLibC();
     exe.addCSourceFile(compat_path, &.{});
-    exe.addPackagePath("mruby", package_path);
+    exe.addAnonymousModule("mruby", mruby_module);
     exe.step.dependOn(&build_mruby_step.step);
 }
 
