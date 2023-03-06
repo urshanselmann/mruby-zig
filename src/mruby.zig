@@ -804,7 +804,7 @@ pub const mrb_state = opaque {
     /// @see mrb_args_format
     /// @see mrb_kwargs
     pub fn get_args(self: *Self, fmt: mrb_args_format, args: anytype) mrb_int {
-        return @call(.{}, mrb_get_args, .{ self, fmt } ++ args);
+        return @call(.auto, mrb_get_args, .{ self, fmt } ++ args);
     }
 
     /// get method symbol
@@ -869,10 +869,10 @@ pub const mrb_state = opaque {
     /// @param ... Variadic values(not type safe!).
     /// @return [mrb_value] mruby function value.
     pub fn funcall(self: *Self, obj: mrb_value, method: [*:0]const u8, args: anytype) mrb_value {
-        return @call(.{}, mrb_funcall, .{ self, obj, method, args.len } ++ args);
+        return @call(.auto, mrb_funcall, .{ self, obj, method, args.len } ++ args);
     }
     pub fn funcall_id(self: *Self, obj: mrb_value, mid: mrb_sym, args: anytype) mrb_value {
-        return @call(.{}, mrb_funcall_id, .{ self, obj, mid, args.len } ++ args);
+        return @call(.auto, mrb_funcall_id, .{ self, obj, mid, args.len } ++ args);
     }
 
     /// Call existing ruby functions. This is basically the type safe version of mrb_funcall.
